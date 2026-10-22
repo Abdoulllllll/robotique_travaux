@@ -221,7 +221,7 @@ void avancerDistance(unsigned long cT) {
     Encoder_2.setTarPWM(0);
 firstTime=true;
 appState=PIVOTER_1;
-  // TEST UNIQUEMENT
+ 
 
   }
 }
@@ -415,9 +415,10 @@ float angleParcouru=abs(angleActuel-angleDepart);
 }
 
 void avancer2(unsigned long cT) {
-  static unsigned long lastTime = 0;
-  const int rate = 500;
-
+ static unsigned long lastTime = 0;
+  const int rate = 20;
+  static long depart1 = 0;
+  static long depart2 = 0;
   static bool firstTime = true;
 
   if (firstTime) {
@@ -427,7 +428,13 @@ void avancer2(unsigned long cT) {
     // Exemples :
     //   Angle de référence, initialiser le lastTime,
     //   Chronomètre, etc.
+    depart1 = Encoder_1.getCurPos();
+    depart2 = Encoder_2.getCurPos();
 
+    goStraight(100, 1);
+    led.setColorAt(10, 0, 0, 0);
+    led.setColorAt(9, 0, 255, 0);
+      lastTime = cT;
     firstTime = false;
     return;
   }
@@ -440,30 +447,43 @@ void avancer2(unsigned long cT) {
 
   // Code d'EXÉCUTION de l'état
   // Code de la job à faire
-
+  float distance = distanceParcourue(depart1, depart2);
+  int nbLed = 7;
+  int nbLedAllume = map((long)distance, 0, (long)distanceX, 0, nbLed);
+  for (int i = 0; i < nbLed; i++) {
+    if (i < nbLedAllume) {
+      led.setColorAt(i, 0, 0, 255);
+    } else {
+      led.setColorAt(i, 0, 0, 0);
+    }
+  }
+  led.show();
+  goStraight(100);
   // Code de TRANSITION
   // Il s'agit de la transition qui permet de sortir de l'état
   // Qu'est-ce qui fait que l'on sort de l'état?
-  bool transition = true;
+  bool transition = (distance >= distanceX);
 
   // Il est possible d'avoir plusieurs transitions
 
   if (transition) {
     // Code de SORTIE
     // Code pour terminer l'état
+    Encoder_1.setTarPWM(0);
+    Encoder_2.setTarPWM(0);
+firstTime=true;
+appState=PIVOTER_180;
 
-    firstTime = true;
 
-    // appState = PROCHAIN_ETAT;
   }
 }
 
 void pivoter180(unsigned long cT) {
   static unsigned long lastTime = 0;
-  const int rate = 500;
+  const int rate = 20;
 
   static bool firstTime = true;
-
+static float angleDepart=0;
   if (firstTime) {
     // Code d'ENTRÉE c'est le
     //   code d'initialisation de l'état
@@ -471,10 +491,15 @@ void pivoter180(unsigned long cT) {
     // Exemples :
     //   Angle de référence, initialiser le lastTime,
     //   Chronomètre, etc.
-
+    angleDepart=gyro.getAngleZ();
+    
+ Encoder_1.setTarPWM(-130);
+    Encoder_2.setTarPWM(-130);
     firstTime = false;
+    lastTime=cT;
     return;
   }
+
 
   // Ligne nécessaire si l'on doit temporiser
   // les appels de cet état
@@ -482,13 +507,16 @@ void pivoter180(unsigned long cT) {
 
   lastTime = cT;
 
+float angleActuel=gyro.getAngleZ();
+float angleParcouru=abs(angleActuel-angleDepart);
+
   // Code d'EXÉCUTION de l'état
   // Code de la job à faire
 
   // Code de TRANSITION
   // Il s'agit de la transition qui permet de sortir de l'état
   // Qu'est-ce qui fait que l'on sort de l'état?
-  bool transition = true;
+  bool transition = (angleParcouru>=180.0);
 
   // Il est possible d'avoir plusieurs transitions
 
@@ -496,10 +524,13 @@ void pivoter180(unsigned long cT) {
     // Code de SORTIE
     // Code pour terminer l'état
 
-    firstTime = true;
-
-    // appState = PROCHAIN_ETAT;
+  
+ Encoder_1.setTarPWM(0);
+    Encoder_2.setTarPWM(0); 
+     firstTime = true;
+     appState = TERMINE;
   }
+  
 }
 
 
